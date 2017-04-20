@@ -50,16 +50,30 @@ def service():
         subprocess.check_call([SETTINGS, 'set', 'com.canonical.Unity.Launcher', 'launcher-position', launcher_position ])
 
     
-
-def main():
-    while True:
-        try:
-            service()
-        except KeyboardInterrupt:
-            return 0
-        except Exception as ex:
-            sys.stderr.write('Caught exception: {}'.format(ex))
-
+from daemon import Daemon
+class MyDaemon(Daemon):
+    def run(self):
+        while True:
+            try:
+                service()
+            except KeyboardInterrupt:
+                return 0
+            except Exception as ex:
+                sys.stderr.write('Caught exception: {}'.format(ex))
 
 if __name__ == '__main__':
-    sys.exit(main())
+    daemon = MyDaemon('/tmp/daemon-example.pid')
+    if len(sys.argv) == 2:
+        if 'start' == sys.argv[1]:
+            daemon.start()
+        elif 'stop' == sys.argv[1]:
+            daemon.stop()
+        elif 'restart' == sys.argv[1]:
+            daemon.restart()
+        else:
+           print ("Unknown command")
+           sys.exit(2)
+        sys.exit(0)
+    else:
+        print "usage: %s start|stop|restart" % sys.argv[0]
+        sys.exit(2)
